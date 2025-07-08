@@ -17,26 +17,15 @@
 - Prefer interfaces over types
 - Use absolute imports
 
-### Go
-- Follow Effective Go guidelines
-- Use gofmt and goimports
-- Keep functions under 50 lines
-- Return errors, don't panic
-- Use interfaces for dependencies
-- Follow standard project layout
 
 ## Code Organization
 
 ### Directory Structure
 ```
-src/
-├── api/           # API routes and controllers
-├── config/        # Configuration files
-├── db/            # Database migrations and models
-├── middleware/    # Express/Go middleware
-├── services/      # Business logic
-├── utils/         # Helper functions
-└── types/         # TypeScript types/Go structs
+packages/
+├── frontend/     # Next.js app (src/, pages/, components/, styles/)
+├── backend/      # NestJS API (src/, prisma/, migrations/)
+└── shared/       # Shared libraries/utilities
 ```
 
 ### Naming Conventions

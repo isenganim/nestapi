@@ -33,9 +33,12 @@ S3_BUCKET=your-bucket-name
 
 ## Local Development
 
-### Running with Docker Compose
+### Local Development
 ```bash
-docker-compose -f docker-compose.dev.yml up --build
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
 ```
 
 ### Running Tests

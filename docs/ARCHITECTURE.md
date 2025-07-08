@@ -1,56 +1,46 @@
-# Personal Knowledge Management (PKM) SaaS - Architecture
+# Architecture Overview
 
-## System Overview
-A cloud-based Personal Knowledge Management system that helps users organize, connect, and retrieve their personal knowledge effectively.
+This Turborepo monorepo hosts both frontend and backend for the PKM SaaS application.
 
-## High-Level Architecture
+## Monorepo Structure
+- packages/
+  - frontend/   — Next.js PWA with React, TypeScript, Tailwind CSS
+  - backend/    — NestJS API with TypeScript, JWT auth, Prisma ORM
+  - shared/     — Shared utility libraries (if any)
 
-### Components
-1. **Frontend**
-   - Next.js web application
-   - PWA for offline support
-   - Responsive design for all devices
+## High-Level Components
+- Frontend  
+  • Next.js (React, SSR/SSG)  
+  • PWA support for offline  
+  • Tailwind CSS design system  
 
-2. **Backend Services**
-   - API Gateway
-   - Authentication Service
-   - Note Management Service
-   - AI Processing Service
-   - Search Service
-   - File Storage Service
+- Backend  
+  • NestJS REST API (`/api/v1` routes)  
+  • JWT Authentication (access & refresh tokens)  
+  • Prisma ORM (PostgreSQL)  
+  • Pino logging via nestjs-pino  
 
-3. **Data Storage**
-   - PostgreSQL (primary database)
-   - MongoDB (for flexible document storage)
-   - Redis (caching and sessions)
-   - S3/Cloud Storage (for file uploads)
+- Data Stores  
+  • PostgreSQL (primary database)  
+  • Redis (caching, sessions)  
+  • S3 or cloud storage for file uploads  
 
-4. **AI/ML Components**
-   - NLP Processing
-   - Vector Search
-   - Content Analysis
+## CI/CD & Infrastructure
+- Monorepo build/test via Turborepo  
+- GitHub Actions for lint, test, build, deploy  
+- Docker & Docker Compose for local development  
+- Kubernetes & Helm for production deployments  
+- Terraform for infrastructure provisioning  
 
-## Data Flow
-1. User authentication and session management
-2. CRUD operations for notes and resources
-3. Real-time synchronization across devices
-4. Background AI processing
+## Security & Observability
+- Role-based access control via NestJS guards  
+- End-to-end TLS (HTTPS)  
+- Argon2-hashed passwords  
+- Centralized logging (ELK/Grafana/Sentry)  
+- Monitoring: Prometheus metrics, Grafana dashboards  
 
-## Technology Stack
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Backend**: Node.js (NestJS) or Go (Gin/Fiber)
-- **Database**: PostgreSQL, MongoDB, Redis
-- **AI/ML**: Python microservices, OpenAI API
-- **Infrastructure**: Docker, Kubernetes, AWS/GCP
-- **CI/CD**: GitHub Actions, ArgoCD
-
-## Security Architecture
-- Zero-trust security model
-- End-to-end encryption for sensitive data
-- Regular security audits and penetration testing
-
-## Scalability Considerations
-- Microservices architecture
-- Horizontal scaling of stateless services
-- Database sharding and replication
-- CDN for static assets
+## Scaling & Reliability
+- Horizontal scaling of stateless NestJS services  
+- Connection pooling and read-replicas for PostgreSQL  
+- Redis clustering for cache resilience  
+- Kubernetes HPA for CPU/memory autoscaling
