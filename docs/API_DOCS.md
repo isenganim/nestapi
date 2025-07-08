@@ -193,6 +193,6 @@ Request:
 ## Versioning
 API versioning is done through the URL path:
 - Current version: `v1`
-- Example: `https://api.pkmsaas.com/v1/notes`
+- Example: `http://localhost:3000/api/v1/notes`
 
 Older versions will be maintained for at least 6 months after a new version is released.
