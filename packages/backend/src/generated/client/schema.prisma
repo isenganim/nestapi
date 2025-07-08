@@ -1,0 +1,334 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+  output          = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["auth", "pkm"]
+}
+
+model User {
+  id                       String               @id @default(uuid())
+  email                    String               @unique
+  password                 String?
+  name                     String?
+  avatar                   String?
+  emailVerified            Boolean              @default(false)
+  emailVerificationToken   String?
+  emailVerificationExpires DateTime?
+  passwordResetToken       String?
+  passwordResetExpires     DateTime?
+  twoFactorEnabled         Boolean              @default(false)
+  twoFactorSecret          String?
+  lastLogin                DateTime?
+  failedLoginAttempts      Int                  @default(0)
+  isLocked                 Boolean              @default(false)
+  role                     UserRole             @default(USER)
+  status                   UserStatus           @default(ACTIVE)
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  refreshTokens            RefreshToken[]
+  sessions                 Session[]
+  oauthAccounts            OAuthAccount[]
+  passwordResetTokens      PasswordResetToken[]
+  auditLogs                AuditLog[]
+  preferences              UserPreference?
+  searchHistory            SearchHistory[]
+  notes                    Note[]
+  tags                     Tag[]
+  links                    Link[]
+
+  @@map("users")
+  @@schema("auth")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("refresh_tokens")
+  @@schema("auth")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sessions")
+  @@schema("auth")
+}
+
+model OAuthAccount {
+  provider           String
+  providerUserId     String
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken        String
+  refreshToken       String?
+  accessTokenExpires DateTime?
+
+  @@id([provider, providerUserId])
+  @@map("oauth_accounts")
+  @@schema("auth")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+
+  @@schema("auth")
+}
+
+enum UserStatus {
+  PENDING // Awaiting email verification
+  ACTIVE // Account is active
+  SUSPENDED // Account is temporarily suspended
+  INACTIVE // Account is inactive due to long-term inactivity
+  DELETED // Account is marked for deletion
+
+  @@schema("auth")
+}
+
+// Enum for note content types
+enum NoteContentType {
+  MARKDOWN
+  RICH_TEXT
+  CODE
+  DIAGRAM
+  DRAWING
+
+  @@schema("pkm")
+}
+
+// Enum for link types between notes
+enum NoteLinkType {
+  RELATED // General relationship
+  REFERENCES // Reference/citation
+  CHILD_OF // Hierarchical relationship
+  PARENT_OF // Reverse of CHILD_OF
+  BLOCKS // Blocks/prevents
+  SUPPORTS // Supports/helps with
+  CONTRASTS // Contrasts with
+  UPDATES // Updates or supersedes
+  MENTIONS // Mentions or refers to
+
+  @@schema("pkm")
+}
+
+// Enum for notification types
+enum NotificationType {
+  SYSTEM_ALERT
+  NOTE_UPDATED
+  NOTE_SHARED
+  MENTION
+  COMMENT
+  TASK_ASSIGNED
+  PASSWORD_CHANGED
+  LOGIN_ALERT
+
+  @@schema("pkm")
+}
+
+// Enum for user activity types
+enum ActivityType {
+  LOGIN
+  LOGOUT
+  NOTE_CREATED
+  NOTE_UPDATED
+  NOTE_DELETED
+  TAG_CREATED
+  TAG_UPDATED
+  PASSWORD_CHANGED
+  PROFILE_UPDATED
+  SETTINGS_UPDATED
+
+  @@schema("pkm")
+}
+
+// Note model for the PKM system
+model Note {
+  id          String    @id @default(uuid())
+  title       String    @db.VarChar(255)
+  slug        String    @unique @db.VarChar(300)
+  content     String    @db.Text
+  summary     String?   @db.Text
+  isPublic    Boolean   @default(false)
+  isPinned    Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteTags    NoteTag[]
+  sourceLinks Link[]    @relation("SourceNote")
+  targetLinks Link[]    @relation("TargetNote")
+  metadata    Json?     @default("{}")
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId])
+  @@index([slug])
+  @@index([isPinned])
+  @@index([isArchived])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("notes")
+  @@schema("pkm")
+}
+
+// Tag model for categorizing notes
+model Tag {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(100)
+  slug        String    @db.VarChar(150)
+  description String?   @db.VarChar(500)
+  color       String?   @default("#3b82f6") @db.VarChar(7)
+  noteTags    NoteTag[]
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([name, userId])
+  @@unique([slug, userId])
+  @@index([userId])
+  @@index([slug])
+  @@map("tags")
+  @@schema("pkm")
+}
+
+// Junction table for many-to-many relationship between Note and Tag
+model NoteTag {
+  noteId     String
+  tagId      String
+  note       Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  @@id([noteId, tagId])
+  @@index([tagId])
+  @@map("note_tags")
+  @@schema("pkm")
+}
+
+// Link model for note relationships
+model Link {
+  id          String   @id @default(uuid())
+  sourceId    String
+  targetId    String
+  type        String   @default("RELATED") @db.VarChar(50) // e.g., "RELATED", "REFERENCES", "CHILD_OF", "PARENT_OF"
+  description String?  @db.VarChar(500)
+  weight      Int?     @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  note        Note     @relation("SourceNote", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetNote  Note     @relation("TargetNote", fields: [targetId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [createdBy], references: [id])
+
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("note_links")
+  @@schema("pkm")
+}
+
+// Search history for user searches
+model SearchHistory {
+  id           String   @id @default(uuid())
+  query        String   @db.VarChar(500)
+  filters      Json?    @default("{}")
+  resultCount  Int?
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastSearched DateTime @default(now())
+  searchCount  Int      @default(1)
+  isSaved      Boolean  @default(false)
+  name         String?  @db.VarChar(200)
+  description  String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lastSearched])
+  @@index([isSaved])
+  @@map("search_history")
+  @@schema("pkm")
+}
+
+// User preferences and settings
+model UserPreference {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferences Json     @default("{}")
+  theme       String?  @default("light") @db.VarChar(50)
+  language    String?  @default("en") @db.VarChar(10)
+  timezone    String?  @default("UTC") @db.VarChar(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_preferences")
+  @@schema("pkm")
+}
+
+// Add the PasswordResetToken model if not already present
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  ipAddress String?  @db.VarChar(45)
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+  @@schema("auth")
+}
+
+// Audit log for tracking important actions
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String   @db.VarChar(100)
+  entityType String?  @db.VarChar(50)
+  entityId   String?
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+  @@schema("auth")
+}
