@@ -3,12 +3,10 @@
 ## Authentication & Authorization
 
 ### Authentication
-- OAuth 2.0 with OpenID Connect
-- JWT-based authentication with short-lived access tokens (15-30 minutes)
+- JWT-based authentication with access tokens (15m) and refresh tokens (7d)
+- Argon2-hashed passwords
 - Secure HTTP-only, SameSite cookies for refresh tokens
-- Multi-factor authentication (MFA) support
-- Passwordless login option
-- Social login providers (Google, GitHub, etc.)
+- Role-based authorization via NestJS guards
 
 ### Authorization
 - Role-Based Access Control (RBAC)

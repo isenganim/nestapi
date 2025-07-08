@@ -1,7 +1,7 @@
 # API Documentation
 
 ## Base URL
-`https://api.pkmsaas.com/v1`
+`http://localhost:3000/api/v1`
 
 ## Authentication
 All API endpoints require authentication using a Bearer token in the Authorization header:
@@ -23,7 +23,7 @@ Authorization: Bearer <access_token>
 
 #### Login
 ```
-POST /auth/login
+POST /api/v1/auth/login
 ```
 Request:
 ```json
@@ -45,7 +45,7 @@ Response:
 
 #### Create Note
 ```
-POST /notes
+POST /api/v1/notes
 ```
 Request:
 ```json
@@ -59,22 +59,22 @@ Request:
 
 #### Get Note
 ```
-GET /notes/{noteId}
+GET /api/v1/notes/{noteId}
 ```
 
 #### Update Note
 ```
-PUT /notes/{noteId}
+PUT /api/v1/notes/{noteId}
 ```
 
 #### Delete Note
 ```
-DELETE /notes/{noteId}
+DELETE /api/v1/notes/{noteId}
 ```
 
 #### List Notes
 ```
-GET /notes
+GET /api/v1/notes
 ```
 Query Parameters:
 - `page` (number)
@@ -87,7 +87,7 @@ Query Parameters:
 
 #### Full-text Search
 ```
-GET /search
+GET /api/v1/search
 ```
 Query Parameters:
 - `q` (string): Search query
@@ -98,7 +98,7 @@ Query Parameters:
 
 #### Generate Tags
 ```
-POST /ai/tags
+POST /api/v1/ai/tags
 ```
 Request:
 ```json
@@ -109,7 +109,7 @@ Request:
 
 #### Summarize Text
 ```
-POST /ai/summarize
+POST /api/v1/ai/summarize
 ```
 Request:
 ```json
